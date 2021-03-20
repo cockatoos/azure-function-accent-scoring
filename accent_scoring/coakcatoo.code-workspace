@@ -1,0 +1,14 @@
+{
+	"folders": [
+		{
+			"path": "../../azure-functions-pytorch-image-identify"
+		},
+		{
+			"name": "azure-function-accent-scoring",
+			"path": ".."
+		}
+	],
+	"settings": {
+		"debug.internalConsoleOptions": "neverOpen"
+	}
+}
