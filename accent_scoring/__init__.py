@@ -1,5 +1,6 @@
 import azure.functions as func
 import base64
+import json
 import logging
 from os import listdir
 import sys
