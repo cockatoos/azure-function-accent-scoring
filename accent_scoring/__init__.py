@@ -8,11 +8,12 @@ import tempfile
 
 from .predict import classify_accent
 
+
 def main(req: func.HttpRequest) -> func.HttpResponse:
-    logging.info('Python HTTP trigger function processed a request.')
+    logging.info("Python HTTP trigger function processed a request.")
 
     # running on Azure Function
-    model_path = '/model/new_model.pt'
+    model_path = "/model/new_model.pt"
     # running locally
     # mode_path = '../new_model.pt'
 
@@ -21,17 +22,15 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
     except ValueError:
         pass
     else:
-        mp3_blob = req_body.get('blob')
+        mp3_blob = req_body.get("blob")
         decode(mp3_blob)
         res = classify_accent(tempfile.gettempdir(), model_path)
-        logging.info(f'accent classification result: {res}')
+        logging.info(f"accent classification result: {res}")
 
-    headers = {
-        "Content-type": "application/json",
-        "Access-Control-Allow-Origin": "*"
-    }
+    headers = {"Content-type": "application/json", "Access-Control-Allow-Origin": "*"}
 
-    return func.HttpResponse(json.dumps(res), headers = headers)
+    return func.HttpResponse(json.dumps(res), headers=headers)
+
 
 # TODO (jyz16): add an option to store mp3 file to File Share for debug purposes
 def decode(blob_str):
@@ -41,5 +40,6 @@ def decode(blob_str):
     tempFilePath = tempfile.gettempdir()
     fp = tempfile.NamedTemporaryFile()
     mp3_data = base64.b64decode(blob_str)
-    logging.info('MP3 file is decoded, writing into temp file...')
+    logging.info("MP3 file is decoded, writing into temp file...")
+    # TODO (jyz16): send HTTPResponse to notify front-end of progress
     fp.write(mp3_data)
