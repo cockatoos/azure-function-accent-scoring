@@ -1,18 +1,19 @@
-import pandas as pd
-import os
 import math
-import numpy as np
-import matplotlib.pyplot as plt
+import os
+import pickle
+import random
+from pathlib import Path
+
 import librosa
-from pydub import AudioSegment
-from pydub.silence import split_on_silence
+import matplotlib.pyplot as plt
+import numpy as np
+import pandas as pd
 import torch
 import torch.nn as nn
-import pickle
 import torch.optim as optim
-from torch.utils.data import Dataset, DataLoader
-from pathlib import Path
-import random
+from pydub import AudioSegment
+from pydub.silence import split_on_silence
+from torch.utils.data import DataLoader, Dataset
 
 
 def load_model(modelPath):

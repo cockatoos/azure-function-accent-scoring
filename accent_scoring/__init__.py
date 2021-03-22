@@ -1,10 +1,11 @@
-import azure.functions as func
 import base64
 import json
 import logging
-from os import listdir
 import sys
 import tempfile
+from os import listdir
+
+import azure.functions as func
 
 from .predict import classify_accent
 
