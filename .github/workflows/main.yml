@@ -37,9 +37,7 @@ jobs:
           echo Add other actions to build,
           echo test, and deploy your project.
           
-      - name: Python Linter
-        uses: sunnysid3up/python-linter@v0.1-beta.7
-        with:
-          source: "accent_scoring"
-          mypy-options: "--ignore-missing-imports --show-error-codes"
+      - name: Python Lint (isort/black)
+        uses: wrboyce/python-lint-action@v1.0.0
+
 
