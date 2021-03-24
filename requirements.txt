@@ -12,3 +12,5 @@ pydub
 thinkx
 torch
 SoundFile
+numpy
+panda

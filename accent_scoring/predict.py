@@ -4,6 +4,7 @@ import pickle
 import random
 from pathlib import Path
 
+import logging
 import librosa
 import matplotlib.pyplot as plt
 import numpy as np
@@ -75,6 +76,7 @@ def classify_accent(test_dir, model_path):
     Returns:
         dict (str: int): Mapping of audio filenames to classification result
     """
+    logging.info("Preparing for classification...")
     device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
     model = load_model(model_path)
     predictions = dict()
