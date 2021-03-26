@@ -67,7 +67,8 @@ def segment_and_standardize_audio(path, seg_thresh):
     return standardized_chunks
 
 def save_onnx_model(model, data, save_model_file):
-    torch.onnx.export(model, data, save_model_file)
+    model.eval()
+    torch.onnx.export(model, data, save_model_file, opset_version=11)
 
 
 def classify_accent(test_dir, model_path, save_onnx=False):
@@ -105,19 +106,19 @@ def classify_accent(test_dir, model_path, save_onnx=False):
             # save model in .onnx format to avoid importing torch in Azure Function
             if save_onnx:
                 logging.info("Exporting .onnx model...")
-                save_onnx_model(model, torch.from_numpy(data).unsqueeze(0).float().to(device), "../model.onnx")
+                save_onnx_model(model, torch.from_numpy(data).unsqueeze(0).float().to(device), "../eval_model.onnx")
                 logging.info(".onnx model saved.")
             
             # Load .onnx model and verify correctness
-            onnx_model = onnx.load("../../model.onnx")
+            onnx_model = onnx.load("../../eval_model.onnx")
             onnx.checker.check_model(onnx_model)
             # Predict with onnx model
-            sess = onnxruntime.InferenceSession("../../model.onnx")
+            sess = onnxruntime.InferenceSession("../../eval_model.onnx")
             input_name = sess.get_inputs()[0].name
             result = sess.run(None, {input_name: np.expand_dims(data.astype(np.float32), axis=0)})
             print(f"result from .onnx model: {result}")
 
-
+            model.eval()
             pred = model(torch.from_numpy(data).unsqueeze(0).float().to(device)).item()
             print(f"result from pytorch model: {pred}")
             if pred > 0.5:
