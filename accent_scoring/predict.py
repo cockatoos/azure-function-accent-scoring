@@ -81,7 +81,9 @@ def classify_accent(test_dir, model_path):
     model = load_model(model_path)
     predictions = dict()
     for f in os.listdir(test_dir):
+        logging.info("Segmenting audio...")
         audio_chunks = segment_and_standardize_audio(test_dir + "/" + f, 500)
+        logging.info("Segmentation complete.")
         num_english_pred = 0
         for seg in audio_chunks:
 
@@ -92,7 +94,9 @@ def classify_accent(test_dir, model_path):
             )
 
             mfcc = librosa.feature.mfcc(y=arr, sr=22050)
+            logging.info("generating mfcc data...")
             data = generate_mfcc_data(mfcc)
+            logging.info("mfcc data generated.")
             pred = model(torch.from_numpy(data).unsqueeze(0).float().to(device)).item()
             if pred > 0.5:
                 num_english_pred += 1
