@@ -10,11 +10,13 @@ import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 import torch
-import torch.nn as nn
-import torch.optim as optim
+# import torch.nn as nn
+# import torch.optim as optim
 from pydub import AudioSegment
 from pydub.silence import split_on_silence
-from torch.utils.data import DataLoader, Dataset
+import onnx
+import onnxruntime
+# from torch.utils.data import DataLoader, Dataset
 
 
 def load_model(modelPath):
@@ -100,11 +102,24 @@ def classify_accent(test_dir, model_path, save_onnx=False):
             logging.info("generating mfcc data...")
             data = generate_mfcc_data(mfcc)
             logging.info("mfcc data generated.")
+            # save model in .onnx format to avoid importing torch in Azure Function
             if save_onnx:
                 logging.info("Exporting .onnx model...")
                 save_onnx_model(model, torch.from_numpy(data).unsqueeze(0).float().to(device), "../model.onnx")
                 logging.info(".onnx model saved.")
+            
+            # Load .onnx model and verify correctness
+            onnx_model = onnx.load("../../model.onnx")
+            onnx.checker.check_model(onnx_model)
+            # Predict with onnx model
+            sess = onnxruntime.InferenceSession("../../model.onnx")
+            input_name = sess.get_inputs()[0].name
+            result = sess.run(None, {input_name: np.expand_dims(data.astype(np.float32), axis=0)})
+            print(f"result from .onnx model: {result}")
+
+
             pred = model(torch.from_numpy(data).unsqueeze(0).float().to(device)).item()
+            print(f"result from pytorch model: {pred}")
             if pred > 0.5:
                 num_english_pred += 1
 
@@ -117,3 +132,6 @@ def classify_accent(test_dir, model_path, save_onnx=False):
 
     # there should only be one item in the predictions
     return random.choice(list(predictions.values()))
+
+if __name__ == "__main__":
+    classify_accent("../../data/", "../../new_model.pt")
