@@ -27,7 +27,7 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
     else:
         mp3_blob = req_body.get("blob")
         decode(file_path, mp3_blob)
-        res = classify_accent(data_path, model_path)
+        res = classify_accent(data_path, model_path, save_onnx=False)
         logging.info(f"Classification result: {res}")
 
     headers = {"Content-type": "application/json", "Access-Control-Allow-Origin": "*"}

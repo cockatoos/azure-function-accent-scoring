@@ -64,8 +64,11 @@ def segment_and_standardize_audio(path, seg_thresh):
 
     return standardized_chunks
 
+def save_onnx_model(model, data, save_model_file):
+    torch.onnx.export(model, data, save_model_file)
 
-def classify_accent(test_dir, model_path):
+
+def classify_accent(test_dir, model_path, save_onnx=False):
     """
     Classify audio samples in given directory.
 
@@ -97,6 +100,10 @@ def classify_accent(test_dir, model_path):
             logging.info("generating mfcc data...")
             data = generate_mfcc_data(mfcc)
             logging.info("mfcc data generated.")
+            if save_onnx:
+                logging.info("Exporting .onnx model...")
+                save_onnx_model(model, torch.from_numpy(data).unsqueeze(0).float().to(device), "../model.onnx")
+                logging.info(".onnx model saved.")
             pred = model(torch.from_numpy(data).unsqueeze(0).float().to(device)).item()
             if pred > 0.5:
                 num_english_pred += 1
