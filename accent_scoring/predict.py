@@ -9,22 +9,38 @@ import librosa
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
-import torch
-# import torch.nn as nn
-# import torch.optim as optim
+# import torch
 from pydub import AudioSegment
 from pydub.silence import split_on_silence
 import onnx
 import onnxruntime
-# from torch.utils.data import DataLoader, Dataset
 
 
-def load_model(modelPath):
-    """ Load accent classification model from modelPath."""
-    # modelPath = '../new_model.pt'
-    model = torch.load(modelPath)
-    return model
+############################## PyTorch model is not used in Azure Function. ###########################
+##############################      Uncomment for debugging purposes.       ###########################
+# def load_model(modelPath):
+#     """ Load accent classification model from modelPath."""
+#     model = torch.load(modelPath)
+#     return model
 
+# def save_onnx_model(model, data, save_model_file):
+#     model.eval()
+#     torch.onnx.export(model, data, save_model_file, opset_version=11)
+
+# def classify_accent_with_torch(model_path, data, save_onnx=False):
+#     device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
+#     model = load_model(model_path)
+#     # save model in .onnx format to avoid importing torch in Azure Function
+#     if save_onnx:
+#         logging.info("Exporting .onnx model...")
+#         save_onnx_model(model, torch.from_numpy(data).unsqueeze(0).float().to(device), "../eval_model.onnx")
+#         logging.info(".onnx model saved.")
+
+#     model.eval()
+#     pred = model(torch.from_numpy(data).unsqueeze(0).float().to(device)).item()
+#     print(f"result from pytorch model: {pred}")
+#
+####################################################################################################
 
 def generate_mfcc_data(mfcc):
     mfcc_standardized = np.zeros(mfcc.shape)
@@ -66,10 +82,6 @@ def segment_and_standardize_audio(path, seg_thresh):
 
     return standardized_chunks
 
-def save_onnx_model(model, data, save_model_file):
-    model.eval()
-    torch.onnx.export(model, data, save_model_file, opset_version=11)
-
 
 def classify_accent(test_dir, model_path, save_onnx=False):
     """
@@ -83,8 +95,6 @@ def classify_accent(test_dir, model_path, save_onnx=False):
         dict (str: int): Mapping of audio filenames to classification result
     """
     logging.info("Preparing for classification...")
-    device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
-    model = load_model(model_path)
     predictions = dict()
     for f in os.listdir(test_dir):
         logging.info("Segmenting audio...")
@@ -98,29 +108,24 @@ def classify_accent(test_dir, model_path, save_onnx=False):
             arr = librosa.core.resample(
                 arr, seg.frame_rate, 22050, res_type="kaiser_best"
             )
-
             mfcc = librosa.feature.mfcc(y=arr, sr=22050)
             logging.info("generating mfcc data...")
             data = generate_mfcc_data(mfcc)
             logging.info("mfcc data generated.")
-            # save model in .onnx format to avoid importing torch in Azure Function
-            if save_onnx:
-                logging.info("Exporting .onnx model...")
-                save_onnx_model(model, torch.from_numpy(data).unsqueeze(0).float().to(device), "../eval_model.onnx")
-                logging.info(".onnx model saved.")
             
             # Load .onnx model and verify correctness
-            onnx_model = onnx.load("../../eval_model.onnx")
+            onnx_model = onnx.load(model_path)
             onnx.checker.check_model(onnx_model)
             # Predict with onnx model
-            sess = onnxruntime.InferenceSession("../../eval_model.onnx")
+            sess = onnxruntime.InferenceSession(model_path)
             input_name = sess.get_inputs()[0].name
-            result = sess.run(None, {input_name: np.expand_dims(data.astype(np.float32), axis=0)})
-            print(f"result from .onnx model: {result}")
+            pred = sess.run(None, {input_name: np.expand_dims(data.astype(np.float32), axis=0)})[0]
+            print(f"result from .onnx model: {pred}")
+            logging.info(f"result from .onnx model: {pred}")
 
-            model.eval()
-            pred = model(torch.from_numpy(data).unsqueeze(0).float().to(device)).item()
-            print(f"result from pytorch model: {pred}")
+            # Uncomment this to compare results of .onnx and pytorch model.
+            # classify_accent_with_torch(model_path, data, save_onnx=save_onnx)
+
             if pred > 0.5:
                 num_english_pred += 1
 
@@ -134,5 +139,6 @@ def classify_accent(test_dir, model_path, save_onnx=False):
     # there should only be one item in the predictions
     return random.choice(list(predictions.values()))
 
+# for testing locally
 if __name__ == "__main__":
-    classify_accent("../../data/", "../../new_model.pt")
+    classify_accent("../../data/", "../../eval_model.onnx")

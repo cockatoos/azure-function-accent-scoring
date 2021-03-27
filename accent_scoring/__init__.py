@@ -16,7 +16,7 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
     # running on Azure Function
     # model_path = "/model/new_model.pt"
     # running locally
-    model_path = "../new_model.pt"
+    model_path = "../model.onnx"
     data_path = "../data/"
     file_path = path.join(data_path, "temp.mp3")
 
