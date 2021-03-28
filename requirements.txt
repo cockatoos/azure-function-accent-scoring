@@ -10,7 +10,8 @@ librosa
 pip-chill
 pydub
 thinkx
-torch
 SoundFile
 numpy
 panda
+onnx
+onnxruntime
