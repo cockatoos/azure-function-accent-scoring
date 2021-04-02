@@ -3,9 +3,9 @@
 # Manually managing azure-functions-worker may cause unexpected issues
 
 azure-functions
-azure-cli
-azureml
-azureml-widgets
+# azure-cli
+# azureml
+# azureml-widgets
 librosa
 pip-chill
 pydub

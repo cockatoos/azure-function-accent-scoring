@@ -141,4 +141,4 @@ def classify_accent(test_dir, model_path, save_onnx=False):
 
 # for testing locally
 if __name__ == "__main__":
-    classify_accent("../../data/", "../../eval_model.onnx")
+    classify_accent("../data/", "../eval_model.onnx")
