@@ -11,5 +11,7 @@ RUN apt-get update && apt-get -y install ffmpeg libavcodec-extra
 RUN pip install -r /requirements.txt
 # RUN apt-get install -y libsndfile1
 
-
+RUN echo hello
+RUN dpkg -L ffmpeg
 COPY . /home/site/wwwroot
+RUN dpkg -L ffmpeg

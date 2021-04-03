@@ -1,3 +1,6 @@
+import sys
+sys.path.append('/usr/bin/ffmpeg')
+
 import math
 import os
 import pickle
@@ -98,6 +101,7 @@ def classify_accent(test_dir, model_path, save_onnx=False):
     predictions = dict()
     for f in os.listdir(test_dir):
         logging.info("Segmenting audio...")
+        logging.info(f"Filename: {f}")
         audio_chunks = segment_and_standardize_audio(test_dir + "/" + f, 500)
         logging.info("Segmentation complete.")
         num_english_pred = 0
@@ -137,7 +141,8 @@ def classify_accent(test_dir, model_path, save_onnx=False):
             predictions[f] = 0
 
     # there should only be one item in the predictions
-    return random.choice(list(predictions.values()))
+    score = random.choice(list(predictions.values()))
+    return {"status":"success", "score": score}
 
 # for testing locally
 if __name__ == "__main__":

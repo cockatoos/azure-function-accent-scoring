@@ -3,7 +3,8 @@ import json
 import logging
 import sys
 import tempfile
-from os import listdir, path
+from os import listdir, path, remove
+import glob
 
 import azure.functions as func
 
@@ -26,9 +27,27 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
         pass
     else:
         mp3_blob = req_body.get("blob")
-        decode(file_path, mp3_blob)
-        res = classify_accent(data_path, model_path, save_onnx=False)
-        logging.info(f"Classification result: {res}")
+
+        # clear data path
+        files = glob.glob('./data/*')
+        for f in files:
+            remove(f)
+        files = glob.glob('./data/.*')
+        for f in files:
+            remove(f)
+
+        try:
+            decode(file_path, mp3_blob)
+        except Exception as e:
+            logging.info(f"decode failed with exception: {e}")
+            res = {"status":"failure", "reason":e}
+        
+        try:
+            res = classify_accent(data_path, model_path, save_onnx=False)
+            logging.info(f"Classification result: {res}")
+        except Exception as e:
+            logging.info(f"classification failed with exception: {e}")
+            res = {"status": "failure", "reason": e}
 
     headers = {"Content-type": "application/json", "Access-Control-Allow-Origin": "*"}
 
