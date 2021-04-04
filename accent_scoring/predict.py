@@ -62,42 +62,42 @@ def generate_mfcc_data(mfcc):
     return mfcc_data
 
 
-def segment_and_standardize_audio(path, seg_thresh):
-    sound_file = AudioSegment.from_mp3(path)
-    audio_chunks = split_on_silence(
-        sound_file,
-        # must be silent for at least half a second
-        min_silence_len=80,
-        # consider it silent if quieter than -16 dBFS
-        silence_thresh=-30,
-    )
-    standardized_chunks = []
-
-    for seg in audio_chunks:
-        seg_len = len(seg)
-        if seg_len >= seg_thresh:
-            seg_standardized = seg[0:seg_thresh]
-        else:
-            seg_standardized = seg + AudioSegment.silent(
-                duration=(seg_thresh - seg_len)
-            )
-        standardized_chunks.append(seg_standardized)
-
-    return standardized_chunks
-
-# def segment_and_standardize_audio(path, seg_size):
+# def segment_and_standardize_audio(path, seg_thresh):
 #     sound_file = AudioSegment.from_mp3(path)
-#     limit = len(sound_file) // seg_size if len(sound_file) % seg_size == 0 else len(sound_file) // seg_size + 1
-#     chunks = []
-#     for i in range(0,limit):
-#         chunk = sound_file[i * seg_size : (i + 1) * seg_size]
-#         if len(chunk) < seg_size:
-#             chunk = chunk + AudioSegment.silent(duration=(seg_size - len(chunk)))
+#     audio_chunks = split_on_silence(
+#         sound_file,
+#         # must be silent for at least half a second
+#         min_silence_len=80,
+#         # consider it silent if quieter than -16 dBFS
+#         silence_thresh=-30,
+#     )
+#     standardized_chunks = []
+
+#     for seg in audio_chunks:
+#         seg_len = len(seg)
+#         if seg_len >= seg_thresh:
+#             seg_standardized = seg[0:seg_thresh]
+#         else:
+#             seg_standardized = seg + AudioSegment.silent(
+#                 duration=(seg_thresh - seg_len)
+#             )
+#         standardized_chunks.append(seg_standardized)
+
+#     return standardized_chunks
+
+def segment_and_standardize_audio(path, seg_size):
+    sound_file = AudioSegment.from_mp3(path)
+    limit = len(sound_file) // seg_size if len(sound_file) % seg_size == 0 else len(sound_file) // seg_size + 1
+    chunks = []
+    for i in range(0,limit):
+        chunk = sound_file[i * seg_size : (i + 1) * seg_size]
+        if len(chunk) < seg_size:
+            chunk = chunk + AudioSegment.silent(duration=(seg_size - len(chunk)))
           
 
-#         if np.count_nonzero(chunk.get_array_of_samples()) > 45000:
-#             chunks.append(chunk)
-#     return chunks
+        if np.count_nonzero(chunk.get_array_of_samples()) > 41000:
+            chunks.append(chunk)
+    return chunks
 
 
 def classify_accent(test_dir, model_path, save_onnx=False):
