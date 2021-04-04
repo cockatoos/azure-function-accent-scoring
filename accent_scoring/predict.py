@@ -85,6 +85,20 @@ def segment_and_standardize_audio(path, seg_thresh):
 
     return standardized_chunks
 
+# def segment_and_standardize_audio(path, seg_size):
+#     sound_file = AudioSegment.from_mp3(path)
+#     limit = len(sound_file) // seg_size if len(sound_file) % seg_size == 0 else len(sound_file) // seg_size + 1
+#     chunks = []
+#     for i in range(0,limit):
+#         chunk = sound_file[i * seg_size : (i + 1) * seg_size]
+#         if len(chunk) < seg_size:
+#             chunk = chunk + AudioSegment.silent(duration=(seg_size - len(chunk)))
+          
+
+#         if np.count_nonzero(chunk.get_array_of_samples()) > 45000:
+#             chunks.append(chunk)
+#     return chunks
+
 
 def classify_accent(test_dir, model_path, save_onnx=False):
     """
@@ -102,9 +116,12 @@ def classify_accent(test_dir, model_path, save_onnx=False):
     for f in os.listdir(test_dir):
         logging.info("Segmenting audio...")
         logging.info(f"Filename: {f}")
-        audio_chunks = segment_and_standardize_audio(test_dir + "/" + f, 500)
+        print(f"Filename: {f}")
+        audio_chunks = segment_and_standardize_audio(test_dir + "/" + f, 1000)
+        print(f"length of audio chunks: {len(audio_chunks)}")
         logging.info("Segmentation complete.")
         num_english_pred = 0
+        prob_english_pred = 0
         for seg in audio_chunks:
 
             samples = seg.get_array_of_samples()
@@ -112,7 +129,7 @@ def classify_accent(test_dir, model_path, save_onnx=False):
             arr = librosa.core.resample(
                 arr, seg.frame_rate, 22050, res_type="kaiser_best"
             )
-            mfcc = librosa.feature.mfcc(y=arr, sr=22050)
+            mfcc = librosa.feature.mfcc(y=arr, sr=22050, n_mfcc=50)
             logging.info("generating mfcc data...")
             data = generate_mfcc_data(mfcc)
             logging.info("mfcc data generated.")
@@ -129,21 +146,24 @@ def classify_accent(test_dir, model_path, save_onnx=False):
 
             # Uncomment this to compare results of .onnx and pytorch model.
             # classify_accent_with_torch(model_path, data, save_onnx=save_onnx)
+            prob_english_pred += pred
 
             if pred > 0.5:
                 num_english_pred += 1
 
         frac_english_preds = num_english_pred / len(audio_chunks)
+        prob_english_preds = prob_english_pred / len(audio_chunks)
 
-        if frac_english_preds >= 0.5:
-            predictions[f] = 1
-        else:
-            predictions[f] = 0
+        # if frac_english_preds >= 0.5:
+        #     predictions[f] = 1
+        # else:
+        #     predictions[f] = 0
 
     # there should only be one item in the predictions
-    score = random.choice(list(predictions.values()))
-    return {"status":"success", "score": score}
+    # score = random.choice(list(predictions.values()))
+    print(f"prob_english_preds: {prob_english_preds}")
+    return {"status":"success", "score": prob_english_preds}
 
 # for testing locally
 if __name__ == "__main__":
-    classify_accent("../data/", "../eval_model.onnx")
+    classify_accent("../data/", "../binary_accent_classifier.onnx")
