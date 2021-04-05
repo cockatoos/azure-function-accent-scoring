@@ -15,6 +15,7 @@ import numpy as np
 import onnx
 import onnxruntime
 import pandas as pd
+
 # import torch
 from pydub import AudioSegment
 from pydub.silence import split_on_silence
@@ -61,6 +62,7 @@ def generate_mfcc_data(mfcc):
     mfcc_data = np.stack((mfcc_standardized, delta1, delta2))
 
     return mfcc_data
+
 
 def segment_and_standardize_audio(path, seg_size):
     sound_file = AudioSegment.from_mp3(path)
