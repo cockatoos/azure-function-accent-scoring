@@ -1,12 +1,9 @@
-import sys
-
-sys.path.append("/usr/bin/ffmpeg")
-
 import logging
 import math
 import os
 import pickle
 import random
+import sys
 from pathlib import Path
 
 import librosa
@@ -17,6 +14,8 @@ import onnxruntime
 import pandas as pd
 from pydub import AudioSegment
 from pydub.silence import split_on_silence
+
+sys.path.append("/usr/bin/ffmpeg")
 
 ############################## PyTorch model is not used in Azure Function. ###########################
 ##############################      Uncomment for debugging purposes.       ###########################
