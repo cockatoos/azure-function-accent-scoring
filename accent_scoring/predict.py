@@ -161,8 +161,8 @@ def classify_accent(test_dir, model_path, save_onnx=False):
 
     # there should only be one item in the predictions
     # score = random.choice(list(predictions.values()))
-    print(f"prob_english_preds: {prob_english_preds}")
-    return {"status":"success", "score": prob_english_preds}
+    print(f"prob_english_preds: {prob_english_preds[0][0]}")
+    return {"status":"success", "score": str(prob_english_preds[0][0])}
 
 # for testing locally
 if __name__ == "__main__":
