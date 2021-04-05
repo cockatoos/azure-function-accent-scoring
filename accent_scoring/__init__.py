@@ -52,16 +52,11 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
     headers = {"Content-type": "application/json", "Access-Control-Allow-Origin": "*"}
 
     return func.HttpResponse(json.dumps(res), headers=headers)
-    # return func.HttpResponse("success", headers=headers)
 
 
 # TODO (jyz16): add an option to store mp3 file to File Share for debug purposes
 def decode(file_path, blob_str):
     """Decode blob string into mp3 and store as temp file."""
-    # temporary files generated and used by your functions during execution
-    # have to be stored in the temp directory.
-    # tempFilePath = tempfile.gettempdir()
-    # fp = tempfile.NamedTemporaryFile()
     mp3_data = base64.b64decode(blob_str)
     logging.info("MP3 file is decoded, writing into temp file...")
     # TODO (jyz16): send HTTPResponse to notify front-end of progress
