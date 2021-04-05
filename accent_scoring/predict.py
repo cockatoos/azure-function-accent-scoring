@@ -1,23 +1,23 @@
 import sys
-sys.path.append('/usr/bin/ffmpeg')
 
+sys.path.append("/usr/bin/ffmpeg")
+
+import logging
 import math
 import os
 import pickle
 import random
 from pathlib import Path
 
-import logging
 import librosa
 import matplotlib.pyplot as plt
 import numpy as np
+import onnx
+import onnxruntime
 import pandas as pd
 # import torch
 from pydub import AudioSegment
 from pydub.silence import split_on_silence
-import onnx
-import onnxruntime
-
 
 ############################## PyTorch model is not used in Azure Function. ###########################
 ##############################      Uncomment for debugging purposes.       ###########################
@@ -44,6 +44,7 @@ import onnxruntime
 #     print(f"result from pytorch model: {pred}")
 #
 ####################################################################################################
+
 
 def generate_mfcc_data(mfcc):
     mfcc_standardized = np.zeros(mfcc.shape)
@@ -85,15 +86,19 @@ def generate_mfcc_data(mfcc):
 
 #     return standardized_chunks
 
+
 def segment_and_standardize_audio(path, seg_size):
     sound_file = AudioSegment.from_mp3(path)
-    limit = len(sound_file) // seg_size if len(sound_file) % seg_size == 0 else len(sound_file) // seg_size + 1
+    limit = (
+        len(sound_file) // seg_size
+        if len(sound_file) % seg_size == 0
+        else len(sound_file) // seg_size + 1
+    )
     chunks = []
-    for i in range(0,limit):
+    for i in range(0, limit):
         chunk = sound_file[i * seg_size : (i + 1) * seg_size]
         if len(chunk) < seg_size:
             chunk = chunk + AudioSegment.silent(duration=(seg_size - len(chunk)))
-          
 
         if np.count_nonzero(chunk.get_array_of_samples()) > 41000:
             chunks.append(chunk)
@@ -133,14 +138,16 @@ def classify_accent(test_dir, model_path, save_onnx=False):
             logging.info("generating mfcc data...")
             data = generate_mfcc_data(mfcc)
             logging.info("mfcc data generated.")
-            
+
             # Load .onnx model and verify correctness
             onnx_model = onnx.load(model_path)
             onnx.checker.check_model(onnx_model)
             # Predict with onnx model
             sess = onnxruntime.InferenceSession(model_path)
             input_name = sess.get_inputs()[0].name
-            pred = sess.run(None, {input_name: np.expand_dims(data.astype(np.float32), axis=0)})[0]
+            pred = sess.run(
+                None, {input_name: np.expand_dims(data.astype(np.float32), axis=0)}
+            )[0]
             print(f"result from .onnx model: {pred}")
             logging.info(f"result from .onnx model: {pred}")
 
@@ -162,7 +169,8 @@ def classify_accent(test_dir, model_path, save_onnx=False):
     # there should only be one item in the predictions
     # score = random.choice(list(predictions.values()))
     print(f"prob_english_preds: {prob_english_preds[0][0]}")
-    return {"status":"success", "score": str(prob_english_preds[0][0])}
+    return {"status": "success", "score": str(prob_english_preds[0][0])}
+
 
 # for testing locally
 if __name__ == "__main__":

@@ -1,10 +1,10 @@
 import base64
+import glob
 import json
 import logging
 import sys
 import tempfile
 from os import listdir, path, remove
-import glob
 
 import azure.functions as func
 
@@ -29,10 +29,10 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
         mp3_blob = req_body.get("blob")
 
         # clear data path
-        files = glob.glob('./data/*')
+        files = glob.glob("./data/*")
         for f in files:
             remove(f)
-        files = glob.glob('./data/.*')
+        files = glob.glob("./data/.*")
         for f in files:
             remove(f)
 
@@ -40,8 +40,8 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
             decode(file_path, mp3_blob)
         except Exception as e:
             logging.info(f"decode failed with exception: {e}")
-            res = {"status":"failure", "reason":e}
-        
+            res = {"status": "failure", "reason": e}
+
         try:
             res = classify_accent(data_path, model_path, save_onnx=False)
             logging.info(f"Classification result: {res}")
@@ -68,6 +68,7 @@ def decode(file_path, blob_str):
     with open(file_path, "wb+") as mp3:
         mp3.write(mp3_data)
     logging.info("File write successful.")
+
 
 # for testing locally
 if __name__ == "__main__":
